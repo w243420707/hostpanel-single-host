@@ -32,6 +32,10 @@ function projectArgs() {
   return ["--project", PANEL_PROJECT];
 }
 
+export async function ensureImageExists(alias) {
+  await runIncus([...projectArgs(), "image", "show", alias]);
+}
+
 export async function createInstance(payload) {
   const { name, image, cpu } = payload;
   const memory = normalizeMemory(payload.memory);

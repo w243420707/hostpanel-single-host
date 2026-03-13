@@ -144,12 +144,14 @@ function renderTasks(items) {
     .join("");
 }
 
-function renderLogs(items) {
+function renderLogs(items, taskLogs = []) {
   const out = document.getElementById("liveLog");
-  const lines = items.slice(0, 40).map((item) => {
-    const target = item.target ? ` target=${item.target}` : "";
-    return `${item.created_at} ${item.actor} ${item.action}${target}`;
-  });
+  const lines = taskLogs.length
+    ? taskLogs.slice(0, 80).map((log) => `${log.created_at} [task:${log.task_id}] ${log.stage} ${log.message || ""}`)
+    : items.slice(0, 40).map((item) => {
+        const target = item.target ? ` target=${item.target}` : "";
+        return `${item.created_at} ${item.actor} ${item.action}${target}`;
+      });
   out.textContent = lines.join("\n");
 }
 
@@ -163,7 +165,7 @@ function startTaskStream() {
     try {
       const data = JSON.parse(event.data || "{}");
       renderTasks(data.tasks || []);
-      renderLogs(data.logs || []);
+      renderLogs(data.logs || [], data.taskLogs || []);
     } catch (_error) {
       // Ignore malformed payloads and wait for next stream frame.
     }

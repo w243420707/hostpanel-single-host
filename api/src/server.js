@@ -194,7 +194,11 @@ app.get("/stream/tasks", (req, res) => {
         details: row.details_json ? JSON.parse(row.details_json) : null
       }));
 
-    const payload = JSON.stringify({ tasks, logs, ts: nowIso() });
+    const taskLogs = db
+      .prepare("SELECT id, task_id, stage, message, created_at FROM task_logs ORDER BY id DESC LIMIT 200")
+      .all();
+
+    const payload = JSON.stringify({ tasks, logs, taskLogs, ts: nowIso() });
     if (payload === lastPayload) {
       return;
     }

@@ -2,13 +2,22 @@ import "dotenv/config";
 import Database from "better-sqlite3";
 import fs from "node:fs";
 import path from "node:path";
-import { createInstance, runInstanceAction } from "./incus.js";
+import { createInstance, ensureImageExists, runInstanceAction } from "./incus.js";
 
 const dataDir = process.env.DATA_DIR || path.resolve(process.cwd(), "../data");
 fs.mkdirSync(dataDir, { recursive: true });
 const db = new Database(path.join(dataDir, "hostpanel.db"));
 
 db.pragma("journal_mode = WAL");
+db.exec(`
+CREATE TABLE IF NOT EXISTS task_logs (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  task_id INTEGER NOT NULL,
+  stage TEXT NOT NULL,
+  message TEXT,
+  created_at TEXT NOT NULL
+);
+`);
 
 function nowIso() {
   return new Date().toISOString();
@@ -37,6 +46,15 @@ function claimNextTask() {
   };
 }
 
+function addTaskLog(taskId, stage, message) {
+  db.prepare("INSERT INTO task_logs(task_id, stage, message, created_at) VALUES(?, ?, ?, ?)").run(
+    taskId,
+    stage,
+    String(message || ""),
+    nowIso()
+  );
+}
+
 function completeTask(id, result) {
   db.prepare("UPDATE tasks SET status='success', result_json=?, ended_at=? WHERE id=?").run(
     JSON.stringify(result || {}),
@@ -55,11 +73,17 @@ function failTask(id, error) {
 
 async function executeTask(task) {
   if (task.type === "create_instance") {
+    addTaskLog(task.id, "validate", "checking image alias and resource parameters");
+    await ensureImageExists(task.payload.image);
+    addTaskLog(task.id, "launch", `launching instance ${task.payload.name} from ${task.payload.image}`);
     await createInstance(task.payload);
+    addTaskLog(task.id, "done", "instance created");
     return { ok: true };
   }
   if (task.type === "instance_action") {
+    addTaskLog(task.id, "action", `${task.payload.action} ${task.payload.name}`);
     await runInstanceAction(task.payload);
+    addTaskLog(task.id, "done", "action completed");
     return { ok: true };
   }
   throw new Error("unknown_task_type");
@@ -72,9 +96,11 @@ async function tick() {
   }
 
   try {
+    addTaskLog(task.id, "running", "task started");
     const result = await executeTask(task);
     completeTask(task.id, result);
   } catch (error) {
+    addTaskLog(task.id, "failed", error?.message || "task failed");
     failTask(task.id, error);
   }
 }

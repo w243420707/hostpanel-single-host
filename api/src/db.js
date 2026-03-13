@@ -38,6 +38,14 @@ CREATE TABLE IF NOT EXISTS operation_logs (
   details_json TEXT,
   created_at TEXT NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS task_logs (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  task_id INTEGER NOT NULL,
+  stage TEXT NOT NULL,
+  message TEXT,
+  created_at TEXT NOT NULL
+);
 `);
 
 export function nowIso() {

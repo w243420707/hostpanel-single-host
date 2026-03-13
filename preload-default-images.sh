@@ -38,6 +38,10 @@ ensure_project() {
     echo "[INFO] Creating Incus project: $PANEL_PROJECT"
     incus project create "$PANEL_PROJECT"
   fi
+
+  # Reuse default project profiles to ensure root disk/network devices exist.
+  incus project set "$PANEL_PROJECT" features.profiles false >/dev/null 2>&1 || true
+  incus project set "$PANEL_PROJECT" features.images true >/dev/null 2>&1 || true
 }
 
 image_exists() {
