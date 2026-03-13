@@ -24,6 +24,15 @@ ensure_incus_ready() {
   exit 1
 }
 
+ensure_incus_initialized() {
+  if incus storage list >/dev/null 2>&1; then
+    return 0
+  fi
+
+  echo "[INFO] Initializing Incus with auto defaults"
+  incus admin init --auto
+}
+
 ensure_project() {
   if ! incus project show "$PANEL_PROJECT" >/dev/null 2>&1; then
     echo "[INFO] Creating Incus project: $PANEL_PROJECT"
@@ -52,6 +61,7 @@ pull_image_if_missing() {
 main() {
   echo "[INFO] Preloading default images for project $PANEL_PROJECT"
   ensure_incus_ready
+  ensure_incus_initialized
   ensure_project
 
   pull_image_if_missing "alpine/3.20" "alpine/3.20"

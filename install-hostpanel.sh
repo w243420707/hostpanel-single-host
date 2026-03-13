@@ -65,6 +65,35 @@ detect_host_platform() {
   echo "[INFO] Detected host OS: ${HOST_OS_ID} ${HOST_OS_VERSION} (${HOST_OS_FAMILY}), arch: ${HOST_ARCH}"
 }
 
+setup_incus_repo_debian() {
+  local codename="${VERSION_CODENAME:-}"
+
+  if [[ -z "${codename}" && -f /etc/os-release ]]; then
+    # shellcheck disable=SC1091
+    source /etc/os-release
+    codename="${VERSION_CODENAME:-}"
+  fi
+
+  if [[ -z "${codename}" ]]; then
+    echo "[ERROR] Cannot detect distro codename for Incus repository setup." >&2
+    exit 1
+  fi
+
+  echo "[INFO] Configuring Incus repository for ${codename}"
+  mkdir -p /etc/apt/keyrings
+  curl -fsSL https://pkgs.zabbly.com/key.asc -o /etc/apt/keyrings/zabbly-incus.asc
+
+  cat >/etc/apt/sources.list.d/zabbly-incus-stable.sources <<EOF
+Enabled: yes
+Types: deb
+URIs: https://pkgs.zabbly.com/incus/stable
+Suites: ${codename}
+Components: main
+Architectures: $(dpkg --print-architecture)
+Signed-By: /etc/apt/keyrings/zabbly-incus.asc
+EOF
+}
+
 install_incus_if_missing() {
   if command -v incus >/dev/null 2>&1; then
     echo "[INFO] Incus already installed"
@@ -74,6 +103,8 @@ install_incus_if_missing() {
   echo "[INFO] Installing Incus"
   case "${HOST_OS_FAMILY}" in
     debian)
+      apt-get update
+      setup_incus_repo_debian
       apt-get update
       apt-get install -y incus
       ;;
