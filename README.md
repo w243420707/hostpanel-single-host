@@ -21,9 +21,11 @@ During installation, you can input a web port. If you press Enter directly, it u
 
 ## Default Admin
 - Username: `admin`
-- Password: `admin123`
+- Password: `change-me-now`
 
 Change credentials in `/opt/hostpanel/.env` after installation and restart services.
+
+Note: `ADMIN_USERNAME` and `ADMIN_PASSWORD` are only used when the database is created for the first time.
 
 ## Services
 - `hostpanel-api` on port 9000
