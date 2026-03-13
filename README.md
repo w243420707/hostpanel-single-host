@@ -10,12 +10,8 @@ A minimal management panel designed for direct installation on one Linux host.
 - Default images are preloaded during install
 
 ## Quick Install (Linux host)
-1. Copy this repository to host.
-2. Run as root:
-
 ```bash
-chmod +x ./install-hostpanel.sh ./preload-default-images.sh
-./install-hostpanel.sh
+wget -qO install.sh https://raw.githubusercontent.com/w243420707/hostpanel-single-host/main/install.sh && sudo bash install.sh
 ```
 
 During installation, you can input a web port. If you press Enter directly, it uses `2026`.
