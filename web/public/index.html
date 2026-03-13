@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HostPanel</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <header>
+    <h1>HostPanel 单宿主机 LXC 面板</h1>
+    <div class="small">默认镜像: alpine/3.20, debian12</div>
+  </header>
+
+  <main>
+    <section id="loginCard" class="card">
+      <h2>管理员登录</h2>
+      <div class="row">
+        <input id="username" placeholder="用户名" value="admin" />
+        <input id="password" type="password" placeholder="密码" value="admin123" />
+        <button id="loginBtn">登录</button>
+      </div>
+      <div id="loginMsg" class="small"></div>
+    </section>
+
+    <section id="panel" class="hidden">
+      <div class="card">
+        <h2>创建 LXC 实例</h2>
+        <div class="row">
+          <input id="newName" placeholder="实例名, 如 app-01" />
+          <select id="newImage">
+            <option value="alpine/3.20">alpine/3.20</option>
+            <option value="debian12">debian12</option>
+          </select>
+          <input id="newCpu" placeholder="CPU, 如 1" />
+          <input id="newMemory" placeholder="内存, 如 512MiB" />
+          <input id="newDisk" placeholder="磁盘, 如 5GiB" />
+          <button id="createBtn">创建</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>实例列表</h2>
+        <button class="secondary" id="reloadInstances">刷新</button>
+        <table>
+          <thead>
+            <tr>
+              <th>名称</th>
+              <th>状态</th>
+              <th>类型</th>
+              <th>架构</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody id="instanceBody"></tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <h2>重装系统</h2>
+        <div class="row">
+          <input id="rebuildName" placeholder="实例名" />
+          <select id="rebuildImage">
+            <option value="alpine/3.20">alpine/3.20</option>
+            <option value="debian12">debian12</option>
+          </select>
+          <button id="rebuildBtn">提交重装任务</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>重置 root 密码</h2>
+        <div class="row">
+          <input id="resetName" placeholder="实例名" />
+          <input id="resetPassword" type="password" placeholder="新密码（至少8位）" />
+          <button id="resetPwdBtn">提交改密任务</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>终端命令执行</h2>
+        <div class="row">
+          <input id="execName" placeholder="实例名" />
+          <input id="execCommand" placeholder="命令，如 uname -a" style="min-width: 360px" />
+          <button id="execBtn">执行</button>
+        </div>
+        <pre id="execOutput" class="terminal"></pre>
+      </div>
+
+      <div class="card">
+        <h2>任务队列</h2>
+        <button class="secondary" id="reloadTasks">刷新</button>
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>类型</th>
+              <th>状态</th>
+              <th>创建时间</th>
+              <th>错误</th>
+            </tr>
+          </thead>
+          <tbody id="taskBody"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script src="/app.js"></script>
+</body>
+</html>

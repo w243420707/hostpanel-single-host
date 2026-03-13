@@ -1,0 +1,14 @@
+[Unit]
+Description=HostPanel Worker
+After=network.target hostpanel-api.service
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/hostpanel/worker
+EnvironmentFile=/opt/hostpanel/.env
+ExecStart=/usr/bin/node src/worker.js
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,14 @@
+[Unit]
+Description=HostPanel Web
+After=network.target hostpanel-api.service
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/hostpanel/web
+EnvironmentFile=/opt/hostpanel/.env
+ExecStart=/usr/bin/node src/server.js
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target

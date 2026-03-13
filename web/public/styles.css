@@ -1,0 +1,106 @@
+:root {
+  --bg: #f2f5f7;
+  --card: #ffffff;
+  --ink: #0f1720;
+  --muted: #566270;
+  --line: #d8e0e6;
+  --ok: #0b8f58;
+  --warn: #bb6d00;
+  --bad: #b3261e;
+  --brand: #1f6b99;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Segoe UI", "PingFang SC", sans-serif;
+  color: var(--ink);
+  background: radial-gradient(circle at 20% 20%, #eef7ff 0, #f2f5f7 50%, #eaf0f4 100%);
+}
+
+header {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--line);
+  background: #f8fbfd;
+}
+
+main {
+  max-width: 1080px;
+  margin: 20px auto;
+  padding: 0 14px;
+}
+
+h1, h2 {
+  margin: 0 0 10px;
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 14px;
+}
+
+.row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+input, select, button {
+  border: 1px solid #c9d5de;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 14px;
+}
+
+button {
+  background: var(--brand);
+  color: #fff;
+  cursor: pointer;
+}
+
+button.secondary {
+  background: #5a6d7a;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th, td {
+  border-bottom: 1px solid var(--line);
+  padding: 8px;
+  text-align: left;
+  font-size: 13px;
+}
+
+.small {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.hidden {
+  display: none;
+}
+
+.status-success { color: var(--ok); }
+.status-failed { color: var(--bad); }
+.status-running { color: var(--warn); }
+.status-waiting { color: var(--muted); }
+
+.terminal {
+  margin-top: 10px;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #c9d5de;
+  background: #0f1720;
+  color: #d8f0d8;
+  min-height: 120px;
+  white-space: pre-wrap;
+}
