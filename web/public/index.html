@@ -25,6 +25,17 @@
 
     <section id="panel" class="hidden">
       <div class="card">
+        <h2>管理员账号设置</h2>
+        <div class="row">
+          <input id="adminCurrentUsername" placeholder="当前用户名" disabled />
+          <input id="adminOldPassword" type="password" placeholder="当前密码" />
+          <input id="adminNewUsername" placeholder="新用户名（可选）" />
+          <input id="adminNewPassword" type="password" placeholder="新密码（可选，至少8位）" />
+          <button id="adminUpdateBtn">更新账号信息</button>
+        </div>
+      </div>
+
+      <div class="card">
         <h2>创建 LXC 实例</h2>
         <div class="row">
           <input id="newName" placeholder="实例名(小写), 如 app-01" />
@@ -49,6 +60,9 @@
               <th>状态</th>
               <th>类型</th>
               <th>架构</th>
+              <th>SSH端口</th>
+              <th>SSH密码</th>
+              <th>映射端口范围</th>
               <th>操作</th>
             </tr>
           </thead>

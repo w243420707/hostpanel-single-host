@@ -30,8 +30,33 @@ async function login() {
   setText("loginMsg", "登录成功");
   document.getElementById("loginCard").classList.add("hidden");
   document.getElementById("panel").classList.remove("hidden");
-  await Promise.all([loadInstances(), loadTasks()]);
+  await Promise.all([loadInstances(), loadTasks(), loadAdminProfile()]);
   startTaskStream();
+}
+
+async function loadAdminProfile() {
+  const data = await api("/admin/profile");
+  document.getElementById("adminCurrentUsername").value = data.username || "admin";
+}
+
+async function updateAdminCredentials() {
+  const oldPassword = document.getElementById("adminOldPassword").value;
+  const newUsername = document.getElementById("adminNewUsername").value.trim();
+  const newPassword = document.getElementById("adminNewPassword").value;
+
+  await api("/admin/credentials", {
+    method: "POST",
+    body: JSON.stringify({
+      oldPassword,
+      newUsername: newUsername || undefined,
+      newPassword: newPassword || undefined
+    })
+  });
+
+  alert("账号信息已更新，请下次使用新凭据登录。");
+  document.getElementById("adminOldPassword").value = "";
+  document.getElementById("adminNewPassword").value = "";
+  await loadAdminProfile();
 }
 
 async function createInstance() {
@@ -111,6 +136,9 @@ async function loadInstances() {
           <td>${i.status}</td>
           <td>${i.type || "container"}</td>
           <td>${i.architecture || "-"}</td>
+          <td>${i.sshPort || "-"}</td>
+          <td>${i.sshPassword || "-"}</td>
+          <td>${i.portStart && i.portEnd ? `${i.portStart}-${i.portEnd}` : "-"}</td>
           <td>${actionButtons(i.name)}</td>
         </tr>`
     )
@@ -232,5 +260,13 @@ document.getElementById("execBtn").addEventListener("click", async () => {
     await execCommand();
   } catch (error) {
     alert(`执行失败: ${error.message}`);
+  }
+});
+
+document.getElementById("adminUpdateBtn").addEventListener("click", async () => {
+  try {
+    await updateAdminCredentials();
+  } catch (error) {
+    alert(`更新失败: ${error.message}`);
   }
 });

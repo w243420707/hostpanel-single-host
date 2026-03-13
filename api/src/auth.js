@@ -4,7 +4,7 @@ import { getAdminUser, setAdminUser } from "./db.js";
 
 const JWT_SECRET = process.env.JWT_SECRET || "change-me-in-production";
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || "admin";
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "admin123";
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "change-me-now";
 
 export function ensureAdminBootstrap() {
   const existing = getAdminUser();
@@ -42,6 +42,20 @@ export function verifyAdminToken(token) {
   } catch (_error) {
     return null;
   }
+}
+
+export function changeAdminCredentials({ oldPassword, newUsername, newPassword }) {
+  const user = getAdminUser();
+  if (!user) {
+    throw new Error("admin_not_initialized");
+  }
+  if (!bcrypt.compareSync(oldPassword, user.password_hash)) {
+    throw new Error("invalid_old_password");
+  }
+
+  const finalUsername = newUsername || user.username;
+  const finalPasswordHash = newPassword ? bcrypt.hashSync(newPassword, 10) : user.password_hash;
+  setAdminUser(finalUsername, finalPasswordHash);
 }
 
 export function requireAdmin(req, res, next) {

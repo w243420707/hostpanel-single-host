@@ -46,6 +46,16 @@ CREATE TABLE IF NOT EXISTS task_logs (
   message TEXT,
   created_at TEXT NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS instance_access (
+  instance_name TEXT PRIMARY KEY,
+  ssh_port INTEGER NOT NULL,
+  ssh_password TEXT NOT NULL,
+  port_start INTEGER NOT NULL,
+  port_end INTEGER NOT NULL,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
 `);
 
 export function nowIso() {

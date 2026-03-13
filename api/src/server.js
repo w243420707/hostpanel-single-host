@@ -4,7 +4,13 @@ import express from "express";
 import morgan from "morgan";
 import { z } from "zod";
 import { db, nowIso } from "./db.js";
-import { ensureAdminBootstrap, loginAdmin, requireAdmin, verifyAdminToken } from "./auth.js";
+import {
+  changeAdminCredentials,
+  ensureAdminBootstrap,
+  loginAdmin,
+  requireAdmin,
+  verifyAdminToken
+} from "./auth.js";
 import { execInInstance, listInstances } from "./incus.js";
 
 ensureAdminBootstrap();
@@ -57,9 +63,54 @@ app.get("/config/default-images", requireAdmin, (_req, res) => {
 app.get("/instances", requireAdmin, async (_req, res) => {
   try {
     const items = await listInstances();
-    return res.json({ items });
+    const accessRows = db
+      .prepare("SELECT instance_name, ssh_port, ssh_password, port_start, port_end FROM instance_access")
+      .all();
+    const accessMap = new Map(accessRows.map((row) => [row.instance_name, row]));
+    const merged = items.map((item) => {
+      const access = accessMap.get(item.name);
+      return {
+        ...item,
+        sshPort: access?.ssh_port || null,
+        sshPassword: access?.ssh_password || null,
+        portStart: access?.port_start || null,
+        portEnd: access?.port_end || null
+      };
+    });
+    return res.json({ items: merged });
   } catch (error) {
     return res.status(500).json({ error: "list_failed", message: error.message });
+  }
+});
+
+app.get("/admin/profile", requireAdmin, (_req, res) => {
+  const user = db.prepare("SELECT username FROM admin_user WHERE id = 1").get();
+  return res.json({ username: user?.username || "admin" });
+});
+
+app.post("/admin/credentials", requireAdmin, (req, res) => {
+  const schema = z.object({
+    oldPassword: z.string().min(1),
+    newUsername: z.string().regex(/^[a-zA-Z0-9_-]{3,32}$/).optional(),
+    newPassword: z.string().min(8).optional()
+  });
+  const parsed = schema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ error: "invalid_payload" });
+  }
+  if (!parsed.data.newUsername && !parsed.data.newPassword) {
+    return res.status(400).json({ error: "nothing_to_update" });
+  }
+
+  try {
+    changeAdminCredentials(parsed.data);
+    addOperationLog("admin_credentials_updated", req.admin.username, "admin_user", {
+      usernameChanged: Boolean(parsed.data.newUsername),
+      passwordChanged: Boolean(parsed.data.newPassword)
+    });
+    return res.json({ ok: true, message: "credentials_updated" });
+  } catch (error) {
+    return res.status(400).json({ error: error.message || "update_failed" });
   }
 });
 
