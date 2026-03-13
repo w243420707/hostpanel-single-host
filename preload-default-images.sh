@@ -44,6 +44,15 @@ ensure_project() {
   incus project set "$PANEL_PROJECT" features.images true >/dev/null 2>&1 || true
 }
 
+ensure_images_remote() {
+  if incus remote list --format csv | grep -q '^images,'; then
+    return 0
+  fi
+
+  echo "[INFO] Adding incus images remote"
+  incus remote add images https://images.linuxcontainers.org --protocol=simplestreams --public
+}
+
 image_exists() {
   local alias="$1"
   incus --project "$PANEL_PROJECT" image show "$alias" >/dev/null 2>&1
@@ -66,6 +75,7 @@ main() {
   echo "[INFO] Preloading default images for project $PANEL_PROJECT"
   ensure_incus_ready
   ensure_incus_initialized
+  ensure_images_remote
   ensure_project
 
   pull_image_if_missing "alpine/3.20" "alpine/3.20"

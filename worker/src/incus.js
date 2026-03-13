@@ -32,6 +32,13 @@ function projectArgs() {
   return ["--project", PANEL_PROJECT];
 }
 
+function sourceImageName(alias) {
+  if (alias === "debian12") {
+    return "debian/12";
+  }
+  return alias;
+}
+
 async function addProxyDevice(instanceName, deviceName, listen, connect) {
   await runIncus([
     ...projectArgs(),
@@ -48,6 +55,15 @@ async function addProxyDevice(instanceName, deviceName, listen, connect) {
 }
 
 export async function ensureImageExists(alias) {
+  try {
+    await runIncus([...projectArgs(), "image", "show", alias]);
+    return;
+  } catch (_error) {
+    // Try to import missing default alias automatically.
+  }
+
+  const src = sourceImageName(alias);
+  await runIncus([...projectArgs(), "image", "copy", `images:${src}`, "local:", "--alias", alias]);
   await runIncus([...projectArgs(), "image", "show", alias]);
 }
 
