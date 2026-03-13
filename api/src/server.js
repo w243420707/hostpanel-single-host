@@ -4,7 +4,7 @@ import express from "express";
 import morgan from "morgan";
 import { z } from "zod";
 import { db, nowIso } from "./db.js";
-import { ensureAdminBootstrap, loginAdmin, requireAdmin } from "./auth.js";
+import { ensureAdminBootstrap, loginAdmin, requireAdmin, verifyAdminToken } from "./auth.js";
 import { execInInstance, listInstances } from "./incus.js";
 
 ensureAdminBootstrap();
@@ -159,6 +159,55 @@ app.get("/logs", requireAdmin, (_req, res) => {
       details: row.details_json ? JSON.parse(row.details_json) : null
     }));
   return res.json({ items: rows });
+});
+
+app.get("/stream/tasks", (req, res) => {
+  const token = String(req.query.token || "");
+  const admin = verifyAdminToken(token);
+  if (!admin) {
+    return res.status(401).json({ error: "invalid_token" });
+  }
+
+  res.setHeader("Content-Type", "text/event-stream");
+  res.setHeader("Cache-Control", "no-cache");
+  res.setHeader("Connection", "keep-alive");
+
+  let lastPayload = "";
+
+  const writeSnapshot = () => {
+    const tasks = db
+      .prepare(
+        "SELECT id, type, status, payload_json, result_json, error_text, created_at, started_at, ended_at FROM tasks ORDER BY id DESC LIMIT 100"
+      )
+      .all()
+      .map((row) => ({
+        ...row,
+        payload: JSON.parse(row.payload_json || "{}"),
+        result: row.result_json ? JSON.parse(row.result_json) : null
+      }));
+
+    const logs = db
+      .prepare("SELECT id, action, actor, target, details_json, created_at FROM operation_logs ORDER BY id DESC LIMIT 100")
+      .all()
+      .map((row) => ({
+        ...row,
+        details: row.details_json ? JSON.parse(row.details_json) : null
+      }));
+
+    const payload = JSON.stringify({ tasks, logs, ts: nowIso() });
+    if (payload === lastPayload) {
+      return;
+    }
+    lastPayload = payload;
+    res.write(`event: tasks\ndata: ${payload}\n\n`);
+  };
+
+  writeSnapshot();
+  const timer = setInterval(writeSnapshot, 1500);
+
+  req.on("close", () => {
+    clearInterval(timer);
+  });
 });
 
 app.listen(PORT, () => {

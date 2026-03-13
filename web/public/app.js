@@ -1,5 +1,6 @@
 const API_BASE = (window.location.origin.replace(/:\d+$/, ":9000"));
 let token = "";
+let stream = null;
 
 function setText(id, text) {
   document.getElementById(id).textContent = text;
@@ -30,6 +31,7 @@ async function login() {
   document.getElementById("loginCard").classList.add("hidden");
   document.getElementById("panel").classList.remove("hidden");
   await Promise.all([loadInstances(), loadTasks()]);
+  startTaskStream();
 }
 
 async function createInstance() {
@@ -123,8 +125,12 @@ async function loadInstances() {
 
 async function loadTasks() {
   const data = await api("/tasks");
+  renderTasks(data.items || []);
+}
+
+function renderTasks(items) {
   const body = document.getElementById("taskBody");
-  body.innerHTML = data.items
+  body.innerHTML = items
     .map(
       (t) =>
         `<tr>
@@ -136,6 +142,39 @@ async function loadTasks() {
         </tr>`
     )
     .join("");
+}
+
+function renderLogs(items) {
+  const out = document.getElementById("liveLog");
+  const lines = items.slice(0, 40).map((item) => {
+    const target = item.target ? ` target=${item.target}` : "";
+    return `${item.created_at} ${item.actor} ${item.action}${target}`;
+  });
+  out.textContent = lines.join("\n");
+}
+
+function startTaskStream() {
+  if (stream) {
+    stream.close();
+    stream = null;
+  }
+  stream = new EventSource(`${API_BASE}/stream/tasks?token=${encodeURIComponent(token)}`);
+  stream.addEventListener("tasks", (event) => {
+    try {
+      const data = JSON.parse(event.data || "{}");
+      renderTasks(data.tasks || []);
+      renderLogs(data.logs || []);
+    } catch (_error) {
+      // Ignore malformed payloads and wait for next stream frame.
+    }
+  });
+  stream.onerror = () => {
+    setTimeout(() => {
+      if (token) {
+        startTaskStream();
+      }
+    }, 2000);
+  };
 }
 
 document.getElementById("loginBtn").addEventListener("click", async () => {

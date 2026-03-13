@@ -32,20 +32,28 @@ export function loginAdmin(username, password) {
   return token;
 }
 
+export function verifyAdminToken(token) {
+  try {
+    const payload = jwt.verify(token, JWT_SECRET);
+    if (payload.role !== "admin") {
+      return null;
+    }
+    return payload;
+  } catch (_error) {
+    return null;
+  }
+}
+
 export function requireAdmin(req, res, next) {
   const header = req.headers.authorization || "";
   const token = header.startsWith("Bearer ") ? header.slice(7) : null;
   if (!token) {
     return res.status(401).json({ error: "missing_token" });
   }
-  try {
-    const payload = jwt.verify(token, JWT_SECRET);
-    if (payload.role !== "admin") {
-      return res.status(403).json({ error: "forbidden" });
-    }
-    req.admin = payload;
-    return next();
-  } catch (error) {
+  const payload = verifyAdminToken(token);
+  if (!payload) {
     return res.status(401).json({ error: "invalid_token" });
   }
+  req.admin = payload;
+  return next();
 }
