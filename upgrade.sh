@@ -65,6 +65,21 @@ install_deps() {
   npm install --omit=dev
 }
 
+ensure_env_file() {
+  if [[ -f "${INSTALL_DIR}/.env" ]]; then
+    return 0
+  fi
+
+  if [[ -f "${INSTALL_DIR}/.env.example" ]]; then
+    echo "[INFO] .env missing, creating from .env.example"
+    cp "${INSTALL_DIR}/.env.example" "${INSTALL_DIR}/.env"
+    return 0
+  fi
+
+  echo "[ERROR] Missing both ${INSTALL_DIR}/.env and ${INSTALL_DIR}/.env.example" >&2
+  exit 1
+}
+
 reload_services() {
   systemctl daemon-reload
   systemctl restart hostpanel-api hostpanel-worker hostpanel-web
@@ -75,6 +90,7 @@ main() {
   ensure_install_dir
   pull_latest
   install_deps
+  ensure_env_file
   reload_services
   restore_stash_if_needed
   echo "[INFO] Upgrade completed successfully."
