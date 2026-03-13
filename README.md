@@ -14,6 +14,11 @@ A minimal management panel designed for direct installation on one Linux host.
 wget -qO install.sh https://raw.githubusercontent.com/w243420707/hostpanel-single-host/main/install.sh && sudo bash install.sh
 ```
 
+## Quick Upgrade (already installed host)
+```bash
+wget -qO upgrade.sh https://raw.githubusercontent.com/w243420707/hostpanel-single-host/main/upgrade.sh && sudo bash upgrade.sh
+```
+
 During installation, you can input a web port. If you press Enter directly, it uses `2026`.
 
 3. Open web panel: `http://<host-ip>:2026`
