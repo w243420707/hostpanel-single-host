@@ -33,12 +33,18 @@ async function login() {
 }
 
 async function createInstance() {
+  const rawMemory = document.getElementById("newMemory").value.trim();
+  const rawDisk = document.getElementById("newDisk").value.trim();
+
+  const memory = /^\d+$/.test(rawMemory) ? `${rawMemory}MiB` : rawMemory;
+  const disk = /^\d+$/.test(rawDisk) ? `${rawDisk}GiB` : rawDisk;
+
   const payload = {
     name: document.getElementById("newName").value.trim(),
     image: document.getElementById("newImage").value,
     cpu: document.getElementById("newCpu").value.trim() || undefined,
-    memory: document.getElementById("newMemory").value.trim() || undefined,
-    disk: document.getElementById("newDisk").value.trim() || undefined
+    memory: memory || undefined,
+    disk: disk || undefined
   };
   await api("/instances", {
     method: "POST",

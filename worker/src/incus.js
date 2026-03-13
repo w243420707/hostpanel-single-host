@@ -2,6 +2,16 @@ import { execFile } from "node:child_process";
 
 const PANEL_PROJECT = process.env.PANEL_PROJECT || "HostPanel";
 
+function normalizeMemory(value) {
+  if (!value) return value;
+  return /^\d+$/.test(value) ? `${value}MiB` : value;
+}
+
+function normalizeDisk(value) {
+  if (!value) return value;
+  return /^\d+$/.test(value) ? `${value}GiB` : value;
+}
+
 function runIncus(args) {
   return new Promise((resolve, reject) => {
     execFile("incus", args, { timeout: 180000 }, (error, stdout, stderr) => {
@@ -19,7 +29,9 @@ function projectArgs() {
 }
 
 export async function createInstance(payload) {
-  const { name, image, cpu, memory, disk } = payload;
+  const { name, image, cpu } = payload;
+  const memory = normalizeMemory(payload.memory);
+  const disk = normalizeDisk(payload.disk);
   const launchArgs = [...projectArgs(), "launch", image, name, "-c", "security.nesting=true"];
   if (cpu) launchArgs.push("-c", `limits.cpu=${cpu}`);
   if (memory) launchArgs.push("-c", `limits.memory=${memory}`);
