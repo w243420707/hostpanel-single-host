@@ -6,7 +6,11 @@ function runIncus(args) {
   return new Promise((resolve, reject) => {
     execFile("incus", args, { timeout: 120000 }, (error, stdout, stderr) => {
       if (error) {
-        reject(new Error((stderr || error.message).trim()));
+        const detail = [stderr, stdout, error.message]
+          .map((v) => String(v || "").trim())
+          .filter(Boolean)
+          .join("\n");
+        reject(new Error(detail));
         return;
       }
       resolve((stdout || "").trim());

@@ -65,7 +65,7 @@ app.get("/instances", requireAdmin, async (_req, res) => {
 
 app.post("/instances", requireAdmin, (req, res) => {
   const schema = z.object({
-    name: z.string().regex(/^[a-zA-Z0-9-]{2,40}$/),
+    name: z.string().regex(/^[a-z0-9-]{2,40}$/),
     image: z.enum(["alpine/3.20", "debian12"]),
     cpu: z.string().optional(),
     memory: z.string().optional(),
