@@ -71,8 +71,13 @@ pull_image_if_missing() {
   local output
   if ! output=$(incus --project "$PANEL_PROJECT" image copy "images:${remote_image}" local: --alias "$local_alias" 2>&1); then
     if echo "$output" | grep -qi "Alias already exists"; then
-      echo "[INFO] Image already present after copy attempt: $local_alias"
-      return 0
+      if image_exists "$local_alias"; then
+        echo "[INFO] Image already present after copy attempt: $local_alias"
+        return 0
+      fi
+      echo "[ERROR] Alias conflict reported but image not visible in project: $local_alias" >&2
+      echo "$output" >&2
+      return 1
     fi
     echo "$output" >&2
     return 1
