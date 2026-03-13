@@ -59,12 +59,19 @@ export async function ensureImageExists(alias) {
     await runIncus([...projectArgs(), "image", "show", alias]);
     return;
   } catch (_error) {
+    // fall through
+  }
+
+  try {
+    await runIncus(["--project", "default", "image", "show", alias]);
+    return;
+  } catch (_error) {
     // Try to import missing default alias automatically.
   }
 
   const src = sourceImageName(alias);
-  await runIncus([...projectArgs(), "image", "copy", `images:${src}`, "local:", "--alias", alias]);
-  await runIncus([...projectArgs(), "image", "show", alias]);
+  await runIncus(["image", "copy", `images:${src}`, "local:", "--alias", alias]);
+  await runIncus(["--project", "default", "image", "show", alias]);
 }
 
 export async function createInstance(payload) {

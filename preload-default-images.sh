@@ -41,7 +41,8 @@ ensure_project() {
 
   # Reuse default project profiles to ensure root disk/network devices exist.
   incus project set "$PANEL_PROJECT" features.profiles false >/dev/null 2>&1 || true
-  incus project set "$PANEL_PROJECT" features.images true >/dev/null 2>&1 || true
+  # Share image namespace with default project to avoid alias conflicts between projects.
+  incus project set "$PANEL_PROJECT" features.images false >/dev/null 2>&1 || true
 }
 
 ensure_images_remote() {
@@ -55,7 +56,10 @@ ensure_images_remote() {
 
 image_exists() {
   local alias="$1"
-  incus --project "$PANEL_PROJECT" image list --format csv | cut -d',' -f1 | grep -Fxq "$alias"
+  if incus --project "$PANEL_PROJECT" image show "$alias" >/dev/null 2>&1; then
+    return 0
+  fi
+  incus --project default image show "$alias" >/dev/null 2>&1
 }
 
 pull_image_if_missing() {
@@ -69,7 +73,7 @@ pull_image_if_missing() {
 
   echo "[INFO] Pulling image $remote_image as alias $local_alias"
   local output
-  if ! output=$(incus --project "$PANEL_PROJECT" image copy "images:${remote_image}" local: --alias "$local_alias" 2>&1); then
+  if ! output=$(incus image copy "images:${remote_image}" local: --alias "$local_alias" 2>&1); then
     if echo "$output" | grep -qi "Alias already exists"; then
       if image_exists "$local_alias"; then
         echo "[INFO] Image already present after copy attempt: $local_alias"
