@@ -55,7 +55,7 @@ ensure_images_remote() {
 
 image_exists() {
   local alias="$1"
-  incus --project "$PANEL_PROJECT" image show "$alias" >/dev/null 2>&1
+  incus --project "$PANEL_PROJECT" image list --format csv | cut -d',' -f1 | grep -Fxq "$alias"
 }
 
 pull_image_if_missing() {
@@ -68,7 +68,15 @@ pull_image_if_missing() {
   fi
 
   echo "[INFO] Pulling image $remote_image as alias $local_alias"
-  incus --project "$PANEL_PROJECT" image copy "images:${remote_image}" local: --alias "$local_alias"
+  local output
+  if ! output=$(incus --project "$PANEL_PROJECT" image copy "images:${remote_image}" local: --alias "$local_alias" 2>&1); then
+    if echo "$output" | grep -qi "Alias already exists"; then
+      echo "[INFO] Image already present after copy attempt: $local_alias"
+      return 0
+    fi
+    echo "$output" >&2
+    return 1
+  fi
 }
 
 main() {
