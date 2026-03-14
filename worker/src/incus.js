@@ -32,6 +32,21 @@ function projectArgs() {
   return ["--project", PANEL_PROJECT];
 }
 
+export async function instanceExists(name) {
+  try {
+    await runIncus([...projectArgs(), "info", name]);
+    return true;
+  } catch (_error) {
+    return false;
+  }
+}
+
+export async function ensureInstanceNotExists(name) {
+  if (await instanceExists(name)) {
+    throw new Error(`instance_already_exists: ${name}`);
+  }
+}
+
 function sourceImageName(alias) {
   if (alias === "debian12") {
     return "debian/12";

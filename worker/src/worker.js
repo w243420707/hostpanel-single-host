@@ -7,6 +7,7 @@ import {
   addSshPortMappings,
   createInstance,
   ensureImageExists,
+  ensureInstanceNotExists,
   runInstanceAction,
   setRootPassword
 } from "./incus.js";
@@ -172,6 +173,8 @@ async function executeTask(task) {
     );
     addTaskLog(task.id, "validate", "checking image alias and resource parameters");
     await ensureImageExists(task.payload.image);
+    addTaskLog(task.id, "validate", `checking instance name availability: ${task.payload.name}`);
+    await ensureInstanceNotExists(task.payload.name);
     addTaskLog(task.id, "launch", `launching instance ${task.payload.name} from ${task.payload.image}`);
     await createInstance(task.payload);
     addTaskLog(task.id, "init", "setting root password");
